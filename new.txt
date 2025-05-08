@@ -1,6 +1,4 @@
-Hi helloo this is new file created from terminal.
-Adding the content from the terminal.
-
 Again, Prathik started to edit this file here.
 
 Amit is editing.
+This text line is to test Merge conflict
