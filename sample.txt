@@ -1,1 +1,3 @@
 Hi this is sample Test File.
+
+Configuring the new add command that is able to pull,commit and push.
