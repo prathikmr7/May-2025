@@ -1,0 +1,65 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(name: 'terraformAction', choices: ['apply', 'destroy'], description: 'Choose your Terraform action')
+    }
+
+    environment {
+        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+    }
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                script {
+                    dir('terraform') {
+                        git branch: 'terraform', url: 'https://github.com/prathikmr7/May-2025.git'
+                    }
+                }
+            }
+        }
+
+        stage('Plan') {
+            steps {
+                script {
+                    dir('terraform/project-2') {
+                        sh 'terraform init'
+                        sh 'terraform plan -out=tfplan'
+                        sh 'terraform show -no-color tfplan > tfplan.txt'
+                    }
+                }
+            }
+        }
+
+        stage('Approval') {
+            steps {
+                script {
+                    def plan = readFile 'terraform/project-2/tfplan.txt'
+                    input message: 'Do you want to proceed with Terraform actions?',
+                          parameters: [text(name: 'plan', description: 'Please review the plan', defaultValue: plan)]
+                }
+            }
+        }
+
+        stage('Apply or Destroy') {
+            when {
+                expression {
+                    return params.terraformAction == 'apply' || params.terraformAction == 'destroy'
+                }
+            }
+            steps {
+                script {
+                    dir('terraform/project-2') {
+                        if (params.terraformAction == 'apply') {
+                            sh 'terraform apply -input=false tfplan'
+                        } else if (params.terraformAction == 'destroy') {
+                            sh 'terraform destroy -auto-approve'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
